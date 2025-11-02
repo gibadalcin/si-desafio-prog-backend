@@ -1,0 +1,42 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend do Sistema de Matrículas - API",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "prestart": "node scripts/prestart.js",
+    "start:dev": "npm run migrate && npm run seed && node src/app.js",
+    "dev": "nodemon --watch src --exec node src/app.js",
+    "test:capacity": "node scripts/test_capacity.js",
+    "migrate": "npx knex migrate:latest --knexfile knexfile.js",
+    "seed": "npx knex seed:run --knexfile knexfile.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "openapi:export": "node scripts/export_openapi.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^6.15.0",
+    "jsonwebtoken": "^9.0.0",
+    "knex": "^2.5.1",
+    "sqlite3": "^5.1.6",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.3"
+  },
+  "devDependencies": {
+    "jest": "^29.6.1",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 20000
+  }
+}

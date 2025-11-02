@@ -1,0 +1,485 @@
+{
+    "info": {
+        "_postman_id": "capacity-test-0000-4000-8000-000000000000",
+        "name": "Sistema Matrículas - Capacity Test",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": "Coleção contendo apenas o fluxo de teste de capacidade (criar turma com 2 vagas, criar 3 alunos e tentar matriculá-los)."
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        },
+        {
+            "key": "accessToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "refreshToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "turmaId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "student1Id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "student2Id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "student3Id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "student1Token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "student2Token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "student3Token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Capacity test",
+            "item": [
+                {
+                    "name": "Create Turma (TEST)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"codigo\": \"TEST-TURMA-{{$timestamp}}\",\n  \"nome\": \"Turma de Teste {{$timestamp}}\",\n  \"disciplina_id\": null,\n  \"horario_id\": null,\n  \"vagas\": 2\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/turmas",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "turmas"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "try {",
+                                    "  const body = pm.response.json();",
+                                    "  if (body && body.id) { pm.collectionVariables.set('turmaId', body.id); }",
+                                    "} catch (e) { /* ignore non-json */ }"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Student 1",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"nome\": \"Aluno Test 1 {{$timestamp}}\",\n  \"email\": \"student1-{{$timestamp}}@test.local\",\n  \"senha\": \"senha123\",\n  \"roles\": [\"ALUNO\"]\n}\n",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/usuarios/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "usuarios",
+                                "register"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "try {",
+                                    "  const body = pm.response.json();",
+                                    "  if (body && body.id) { pm.collectionVariables.set('student1Id', body.id); }",
+                                    "  // attempt auto-login using the same request body email/senha (fallback to response.email)",
+                                    "  let reqRaw = pm.request.body && pm.request.body.raw ? pm.request.body.raw : null;",
+                                    "  let credentials = { email: null, senha: 'senha123' };",
+                                    "  try { if (reqRaw) { const parsed = JSON.parse(reqRaw); credentials.email = parsed.email || parsed.email; credentials.senha = parsed.senha || credentials.senha; } } catch(e){}",
+                                    "  if (!credentials.email && body && body.email) credentials.email = body.email;",
+                                    "  if (credentials.email) {",
+                                    "    pm.sendRequest({",
+                                    "      url: pm.collectionVariables.get('baseUrl') + '/api/auth/login',",
+                                    "      method: 'POST',",
+                                    "      header: { 'Content-Type': 'application/json' },",
+                                    "      body: { mode: 'raw', raw: JSON.stringify({ email: credentials.email, senha: credentials.senha }) }",
+                                    "    }, function (err, res) {",
+                                    "      if (!err && res && res.json) { try { const rb = res.json(); if (rb.accessToken) pm.collectionVariables.set('student1Token', rb.accessToken); if (rb.user && rb.user.id) { pm.collectionVariables.set('student1Id', rb.user.id); } else if (rb.id) { pm.collectionVariables.set('student1Id', rb.id); } } catch(e){} }",
+                                    "    });",
+                                    "  }",
+                                    "} catch(e){}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Student 2",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"nome\": \"Aluno Test 2 {{$timestamp}}\",\n  \"email\": \"student2-{{$timestamp}}@test.local\",\n  \"senha\": \"senha123\",\n  \"roles\": [\"ALUNO\"]\n}\n",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/usuarios/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "usuarios",
+                                "register"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "try {",
+                                    "  const body = pm.response.json();",
+                                    "  if (body && body.id) { pm.collectionVariables.set('student2Id', body.id); }",
+                                    "  let reqRaw = pm.request.body && pm.request.body.raw ? pm.request.body.raw : null;",
+                                    "  let credentials = { email: null, senha: 'senha123' };",
+                                    "  try { if (reqRaw) { const parsed = JSON.parse(reqRaw); credentials.email = parsed.email || parsed.email; credentials.senha = parsed.senha || credentials.senha; } } catch(e){}",
+                                    "  if (!credentials.email && body && body.email) credentials.email = body.email;",
+                                    "  if (credentials.email) {",
+                                    "    pm.sendRequest({",
+                                    "      url: pm.collectionVariables.get('baseUrl') + '/api/auth/login',",
+                                    "      method: 'POST',",
+                                    "      header: { 'Content-Type': 'application/json' },",
+                                    "      body: { mode: 'raw', raw: JSON.stringify({ email: credentials.email, senha: credentials.senha }) }",
+                                    "    }, function (err, res) {",
+                                    "      if (!err && res && res.json) { try { const rb = res.json(); if (rb.accessToken) pm.collectionVariables.set('student2Token', rb.accessToken); if (rb.user && rb.user.id) { pm.collectionVariables.set('student2Id', rb.user.id); } else if (rb.id) { pm.collectionVariables.set('student2Id', rb.id); } } catch(e){} }",
+                                    "    });",
+                                    "  }",
+                                    "} catch(e){}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Student 3",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"nome\": \"Aluno Test 3 {{$timestamp}}\",\n  \"email\": \"student3-{{$timestamp}}@test.local\",\n  \"senha\": \"senha123\",\n  \"roles\": [\"ALUNO\"]\n}\n",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/usuarios/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "usuarios",
+                                "register"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "try {",
+                                    "  const body = pm.response.json();",
+                                    "  if (body && body.id) { pm.collectionVariables.set('student3Id', body.id); }",
+                                    "  let reqRaw = pm.request.body && pm.request.body.raw ? pm.request.body.raw : null;",
+                                    "  let credentials = { email: null, senha: 'senha123' };",
+                                    "  try { if (reqRaw) { const parsed = JSON.parse(reqRaw); credentials.email = parsed.email || parsed.email; credentials.senha = parsed.senha || credentials.senha; } } catch(e){}",
+                                    "  if (!credentials.email && body && body.email) credentials.email = body.email;",
+                                    "  if (credentials.email) {",
+                                    "    pm.sendRequest({",
+                                    "      url: pm.collectionVariables.get('baseUrl') + '/api/auth/login',",
+                                    "      method: 'POST',",
+                                    "      header: { 'Content-Type': 'application/json' },",
+                                    "      body: { mode: 'raw', raw: JSON.stringify({ email: credentials.email, senha: credentials.senha }) }",
+                                    "    }, function (err, res) {",
+                                    "      if (!err && res && res.json) { try { const rb = res.json(); if (rb.accessToken) pm.collectionVariables.set('student3Token', rb.accessToken); if (rb.user && rb.user.id) { pm.collectionVariables.set('student3Id', rb.user.id); } else if (rb.id) { pm.collectionVariables.set('student3Id', rb.id); } } catch(e){} }",
+                                    "    });",
+                                    "  }",
+                                    "} catch(e){}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Enroll Student 1",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{student1Token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"turmaId\": \"{{turmaId}}\"\n}\n",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/matriculas",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "matriculas"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Enroll Student 2",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{student2Token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"turmaId\": \"{{turmaId}}\"\n}\n",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/matriculas",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "matriculas"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Enroll Student 3",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{student3Token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"turmaId\": \"{{turmaId}}\"\n}\n",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/matriculas",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "matriculas"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET Professores (ADMIN)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/usuarios/professores",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "usuarios",
+                                "professores"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET Turmas do Professor (ADMIN or owner)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/usuarios/:id/turmas",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "usuarios",
+                                ":id",
+                                "turmas"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET Professores com Turmas (ADMIN)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/usuarios/professores/turmas",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "usuarios",
+                                "professores",
+                                "turmas"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
